@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import os
-import constants
-
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+import constants
+
 def process_input():
-    usage = '%(prog)s [options] file'
+    usage = '%(prog)s [options] file(s)'
     version = '0.9.0'
     description = 'Synchronize dot files and other config files across multiple systems.'
     epilog = ''
@@ -35,37 +35,54 @@ def process_input():
         '-r', '--restore',
         metavar='FILE',
         action='store',
-        help='restore a configuration file from the repository')
+        help='restore a file from the repository')
     parser.add_argument(
-        '-n', '--add',
+        '-n', '--new',
         metavar='FILE',
         action='store',
-        help='add a file to the repository without editing it.')
+        help='add a new file to the repository without editing it.')
+    parser.add_argument(
+        '-p', '--push',
+        action='store_true',
+        help='push all changes to the remote')
     parser.add_argument(
         '-a', '--all',
         action='store_true',
-        help='restore all configuration files from the repository')
+        help='restore all files from the repository')
     parser.add_argument(
         '-i', '--init',
         action='store_true',
-        help='initialize or change configuration')
+        help='initialize a git repository to be used with %(prog)s')
+    parser.add_argument(
+        '-c', '--configure',
+        action='store_true',
+        help='edit the configuration')
     parser.add_argument(
         '-v', '--version',
         action='version',
         version='%(prog)s {}'.format(version),
         help='display the program\'s version number')
     parser.add_argument(
-        'file',
+        'files',
+        metavar='file(s)',
         action='store',
-        help='the file to add or edit',
-        nargs='?')
+        default='',
+        help='file or list of files to edit',
+        nargs='*')
 
     options = parser.parse_args()
 
-    if all(x==False for x in vars(options).values()):
-        parser.error('Incorrect number of arguments.')
-
-    return options
+    # check not more than 1 option is given
+    if sum(list(vars(options).values())[0:-1]) > 1:
+        parser.error('Only one option can be supplied at a time.')
+    # check if either an option or a file is given
+    elif not any(list(vars(options).values())[0:-1]) and len(options.files) < 1:
+        parser.error('Please supply a file or option. (-h for help)')
+    # check that not more than one file is given when using specific options
+    elif (options.restore or options.new) and len(options.files) < 1:
+        parser.error('Please supply exactly 1 argument when using --restore or --add.')
+    else:
+        return options
 
 def format_sentences(text):
     words = text.split()

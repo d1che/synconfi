@@ -17,33 +17,61 @@
 import paths
 from ui import message, process_input, ask_input
 from config import Config
-from git import git_init, git, test_connection, check_remote
+from commands import test_connection, check_remote, git_init, git, edit
 
 options = process_input()
+
 config = Config()
 
 if options.restore:
-  print('restore')
-elif options.add:
-  print('add')
+  try:
+    print('restore')
+  except:
+    exit()
+elif options.new:
+  try:
+    print('new')
+  except:
+    exit()
+elif options.push:
+  try:
+    print('push')
+  except:
+    exit()
 elif options.all:
-  print('all')
+  try:
+    print('all')
+  except:
+    exit()
 elif options.init:
-  message('Testing github connection', 'cyan')
-  test_connection()
-  repo_remote = ask_input('To begin, please create an empty git repository on github or bitbucket you wish to use with synconfi. When you are done, please enter the ssh address')
-  message('Checking remote connection', 'cyan')
-  if check_remote(repo_remote):
-    config.current['repo_remote'] = repo_remote
-    config.save()
-  message('Initializing empty repository in {}'.format(paths.REPO), 'cyan')
-  git_init()
-  message('Disabling showUntrackedFiles', 'cyan')
-  git('config', '--local', 'status.showUntrackedFiles', 'no')
-  message('Creating first commit', 'cyan')
-  git('add', paths.CONFIG)
-  git('commit', '-m', '"Synconfi initial commit"')
-  message('Adding remote', 'cyan')
-  git('remote', 'add', 'origin', config.current['repo_remote'])
-  message('Pushing changes to remote', 'cyan')
-  git('push', 'origin', 'main')
+  try:
+    message('Testing github connection', 'cyan')
+    test_connection()
+    repo_remote = ask_input('To begin, please create an empty git repository on github or bitbucket you wish to use with synconfi. When you are done, please enter the ssh address')
+    message('Checking remote connection', 'cyan')
+    if check_remote(repo_remote):
+      config.current['repo_remote'] = repo_remote
+      config.save()
+    message('Initializing empty repository in {}'.format(paths.REPO), 'cyan')
+    git_init()
+    message('Disabling showUntrackedFiles', 'cyan')
+    git('config', '--local', 'status.showUntrackedFiles', 'no')
+    message('Creating first commit', 'cyan')
+    git('add', paths.CONFIG)
+    git('commit', '-m', '"Synconfi initial commit"')
+    message('Adding remote', 'cyan')
+    git('remote', 'add', 'origin', config.current['repo_remote'])
+    message('Pushing changes to remote', 'cyan')
+    git('push', 'origin', 'main')
+  except:
+    exit()
+elif options.configure:
+  try:
+    print('configure')
+  except:
+    exit()
+else:
+  try:
+    edit(options.files)
+  except:
+    exit()
