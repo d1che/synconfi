@@ -25,15 +25,13 @@ def which_git():
         message('ERROR: git is not installed on this system.', 'red')
         exit()
 
-def git(command):
-    cmd_list = command.split('\"'|'\'')
-    print(cmd_list)
+def git(*commands):
     git = which_git()
     output = subprocess.run([
         '{}'.format(git),
         '--git-dir={}/'.format(paths.REPO),
-        '--work-tree={}'.format(paths.HOME)]
-        + cmd_list,
+        '--work-tree={}'.format(paths.HOME),
+        *commands],
         capture_output=True)
     if output.returncode != 0:
         message('ERROR: {}.'.format(output.stderr.decode("utf-8").strip()), 'red')
