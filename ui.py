@@ -111,10 +111,15 @@ def ask_confirm(prompt='Continue?'):
             case _:
                 print('Incorrect answer')
 
-def ask_input(prompt):
-    answer = input('{}: '.format(format_sentences(prompt)))
-    if answer != None:
-        return answer
+def ask_input(prompt, default=None):
+    while True:
+        answer = input('{}: '.format(format_sentences(prompt)))
+        if answer != '':
+            return answer
+        elif default != None:
+            return default
+        else:
+            print('No input was received')
 
 def message(text, color=None):
     match color:

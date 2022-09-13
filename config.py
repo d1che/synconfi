@@ -15,51 +15,20 @@
 import os
 import json
 
-from ui import message
+from ui import error
 import paths
 
 class Config():
     def __init__(self):
         self.defaults = {
-            'repo_path' : paths.REPO,
-            'repo_remote': ''
+            'repo_local' : paths.REPO,
+            'repo_remote': '',
+            'editor': 'vim',
         }
         self.current = {}
         self.init()
 
-    def load(self):
-        try:
-            f = open(paths.CONFIG, 'r')
-            self.current = json.load(f)
-            f.close()
-            return True
-        except:
-            message('CONFIG: Could not load configuration.', 'red')
-            return False
-
-    def save(self):
-        try:
-            f = open(paths.CONFIG, 'w')
-            json.dump(self.current, f, sort_keys = True, indent = 4)
-            f.write('\n')
-            f.close()
-            return True
-        except:
-            message('CONFIG: Could not save configuration.', 'red')
-            return False
-
-    def save_defaults(self):
-        try:
-            f = open(paths.CONFIG, 'w')
-            json.dump(self.defaults, f, sort_keys = True, indent = 4)
-            f.write('\n')
-            f.close()
-            return True
-        except:
-            message('PREFS: Could not save preferences.', 'red')
-            return False
-
-    def validate(self):
+    def validate(self): 
         try:
             f = open(paths.CONFIG, 'r')
             check = json.load(f)
@@ -72,6 +41,46 @@ class Config():
             return True
         else:
             return False
+
+    def save_defaults(self):
+        try:
+            f = open(paths.CONFIG, 'w')
+            json.dump(self.defaults, f, sort_keys = True, indent = 4)
+            f.write('\n')
+            f.close()
+            return True
+        except:
+            error('Could not save preferences.')
+            return False
+
+    def load(self):
+        try:
+            f = open(paths.CONFIG, 'r')
+            self.current = json.load(f)
+            f.close()
+            return True
+        except:
+            error('Could not load configuration.')
+            return False
+
+    def save(self):
+        try:
+            f = open(paths.CONFIG, 'w')
+            json.dump(self.current, f, sort_keys = True, indent = 4)
+            f.write('\n')
+            f.close()
+            return True
+        except:
+            error('Could not save configuration.')
+            return False
+
+    def set(self, **kwargs):
+        if not self.current.keys() >= kwargs.keys():
+            error('Invalid key supplied.')
+        else:
+            for key, value in kwargs.items():
+                self.current[key] = value
+            self.save()
 
     def init(self):
         self.init_program_root()
@@ -100,4 +109,4 @@ class Config():
                 d.close()
                 os.remove(os.path.join(paths.PROGRAM_ROOT, '.temp_output'))
             except:
-                message('ERROR: Could not create program root.', 'red')
+                error('ERROR: Could not create program root.')

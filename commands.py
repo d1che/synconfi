@@ -48,12 +48,12 @@ def check_remote(remote):
     else:
         return True
 
-def git_init():
+def git_init(path):
     git = which('git')
     output = subprocess.run([
         '{}'.format(git),
         'init',
-        '--bare', '{}'.format(paths.REPO)],
+        '--bare', '{}'.format(path)],
         capture_output=True)
     if output.returncode != 0:
         error('Could not initialize git repository in {}.'.format(paths.REPO))
