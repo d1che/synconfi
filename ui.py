@@ -139,3 +139,9 @@ def message(text, color=None):
     os.system(constants.BOLD)
     print(text)
     os.system(constants.RESET)
+
+def error(text):
+    os.system(constants.RED)
+    os.system(constants.BOLD)
+    print('ERROR: {}'.format(text))
+    os.system(constants.RESET)

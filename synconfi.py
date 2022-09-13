@@ -17,7 +17,7 @@
 import paths
 from ui import message, process_input, ask_input
 from config import Config
-from commands import test_connection, check_remote, git_init, git, edit
+from commands import test_connection, check_remote, git_init, git, edit, which
 
 options = process_input()
 
