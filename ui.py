@@ -86,18 +86,20 @@ def process_input():
 
 def format_sentences(text):
     words = text.split()
-    count = 0
+    i = 0
     sentence = ''
     sentences = []
     while True:
-        if len(sentence) >= constants.MAX_WIDTH or count >= len(words):
-            sentences.append(sentence[0:-1])
-            sentence = ''
-            if count >= len(words)-1:
-                break
+        if i < len(words):
+            if len(sentence) < constants.MAX_WIDTH:
+                sentence += words[i] + ' '
+                i += 1
+            else:
+                sentences.append(sentence[0:-1])
+                sentence = ''
         else:
-            sentence += words[count] + ' '
-            count += 1
+            sentences.append(sentence[0:-1])
+            break
     return '\n'.join(sentences)
 
 def ask_confirm(prompt='Continue?'):
@@ -150,3 +152,4 @@ def error(text):
     os.system(constants.BOLD)
     print('ERROR: {}'.format(text))
     os.system(constants.RESET)
+    exit(1)

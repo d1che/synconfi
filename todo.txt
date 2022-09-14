@@ -1,0 +1,2 @@
+TODO:
+x Find best design pattern for config module

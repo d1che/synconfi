@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
-from os.path import exists
 
 import paths
+import config
 from ui import error, message
 
 def which(command):
@@ -24,7 +25,6 @@ def which(command):
         return output.stdout.decode("utf-8").strip()
     else:
         error('Command not found: {}'.format(command))
-        exit()
 
 def test_connection():
     output = subprocess.run([
@@ -34,8 +34,6 @@ def test_connection():
         capture_output=True)
     if not 'successfully authenticated' in output.stderr.decode("utf-8").strip():
         error('Could not connect to github, please check your internet connection and ssh keys.')
-    else:
-        return True
 
 def check_remote(remote):
     output = subprocess.run([
@@ -44,9 +42,7 @@ def check_remote(remote):
         remote],
         capture_output=True)
     if output.returncode != 0:
-        error('{} does not appear to be a git repository.'.format(remote))
-    else:
-        return True
+        error('{} does not appear to be remote repository.'.format(remote))
 
 def git_init(path):
     git = which('git')
@@ -57,40 +53,34 @@ def git_init(path):
         capture_output=True)
     if output.returncode != 0:
         error('Could not initialize git repository in {}.'.format(paths.REPO))
-    else:
-        return True
 
 def git(*commands):
     git = which('git')
     output = subprocess.run([
         '{}'.format(git),
-        '--git-dir={}/'.format(paths.REPO),
+        '--git-dir={}/'.format(config.current['repo_local']),
         '--work-tree={}'.format(paths.HOME),
         *commands],
         capture_output=True)
     if output.returncode != 0:
         error('{}.'.format(output.stderr.decode("utf-8").strip()))
-    else:
-        return True
 
 def edit(*files):
     nvim = which('nvim')
     commit_list = []
-    for file in files:
-        if exists(file):
+    for file in files[0]:
+        if os.path.exists(os.path.abspath(file)):
             state1 = hash(file)
-            output = subprocess.run([
-                nvim,
-                file],
-            capture_output=True)
-            if output.returncode != 0:
-                error('{}.'.format(output.stderr.decode("utf-8").strip()))
+            os.system('{} {}'.format(nvim, file))
+            state2 = hash(file)
+            if state1 == state2:
+                message('{} was unmodified. Skipping.'.format(file), 'yellow')
             else:
-                state2 = hash(file)
-                if state1 == state2:
-                    message('{} was unmodified Skipping.'.format(file), 'cyan')
-                else:
-                    commit_list.append(file)
+                commit_list.append(file)
         else:
-            error('{} does not exist.'.format(file))
-    git('add', *commit_list)
+            message('{} does not exist. Skipping.'.format(file), 'yellow')
+    if commit_list != []:
+        git('add', *commit_list)
+    else:
+        message('No files to commit.')
+        exit(0)
