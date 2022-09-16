@@ -17,70 +17,86 @@ import subprocess
 
 import paths
 import config
-from ui import error, message
+from ui import message
 
 def which(command):
-    output = subprocess.run(['which', command], capture_output=True)
-    if output.stdout.decode("utf-8").strip() != '':
+    try:
+        output = subprocess.run(['which', command], capture_output=True)
+        if output.stdout.decode("utf-8").strip() == '':
+            raise Exception('Command not found: {}'.format(command))
         return output.stdout.decode("utf-8").strip()
-    else:
-        error('Command not found: {}'.format(command))
+    except Exception as e:
+        print(e)
 
 def test_connection():
-    output = subprocess.run([
-        'ssh',
-        '-T',
-        'git@github.com'],
-        capture_output=True)
-    if not 'successfully authenticated' in output.stderr.decode("utf-8").strip():
-        error('Could not connect to github, please check your internet connection and ssh keys.')
+    try:
+        output = subprocess.run([
+            'ssh',
+            '-T',
+            'git@github.com'],
+            capture_output=True)
+        if not 'successfully authenticated' in output.stderr.decode("utf-8").strip():
+            raise Exception('Could not connect to github, please check your internet connection and ssh keys.')
+    except Exception as e:
+        print(e)
 
 def check_remote(remote):
-    output = subprocess.run([
-        'git',
-        'ls-remote',
-        remote],
-        capture_output=True)
-    if output.returncode != 0:
-        error('{} does not appear to be remote repository.'.format(remote))
+    try:
+        output = subprocess.run([
+            'git',
+            'ls-remote',
+            remote],
+            capture_output=True)
+        if output.returncode != 0:
+            raise Exception('{} does not appear to be remote repository.'.format(remote))
+    except Exception as e:
+        print(e)
 
 def git_init(path):
-    git = which('git')
-    output = subprocess.run([
-        '{}'.format(git),
-        'init',
-        '--bare', '{}'.format(path)],
-        capture_output=True)
-    if output.returncode != 0:
-        error('Could not initialize git repository in {}.'.format(paths.REPO))
+    try:
+        git = which('git')
+        output = subprocess.run([
+            '{}'.format(git),
+            'init',
+            '--bare', '{}'.format(path)],
+            capture_output=True)
+        if output.returncode != 0:
+            raise Exception('Could not initialize git repository in {}.'.format(config.current['repo_local']))
+    except Exception as e:
+        print(e)
 
 def git(*commands):
-    git = which('git')
-    output = subprocess.run([
-        '{}'.format(git),
-        '--git-dir={}/'.format(config.current['repo_local']),
-        '--work-tree={}'.format(paths.HOME),
-        *commands],
-        capture_output=True)
-    if output.returncode != 0:
-        error('{}.'.format(output.stderr.decode("utf-8").strip()))
+    try:
+        git = which('git')
+        output = subprocess.run([
+            '{}'.format(git),
+            '--git-dir={}/'.format(config.current['repo_local']),
+            '--work-tree={}'.format(paths.HOME),
+            *commands],
+            capture_output=True)
+        if output.returncode != 0:
+            raise Exception('{}.'.format(output.stderr.decode("utf-8").strip()))
+    except Exception as e:
+        print(e)
 
 def edit(*files):
-    nvim = which('nvim')
-    commit_list = []
-    for file in files[0]:
-        if os.path.exists(os.path.abspath(file)):
-            state1 = hash(file)
-            os.system('{} {}'.format(nvim, file))
-            state2 = hash(file)
-            if state1 == state2:
-                message('{} was unmodified. Skipping.'.format(file), 'yellow')
+    try:
+        nvim = which('nvim')
+        commit_list = []
+        for file in files[0]:
+            if os.path.exists(os.path.abspath(file)):
+                state1 = hash(file)
+                os.system('{} {}'.format(nvim, file))
+                state2 = hash(file)
+                if state1 == state2:
+                    message('{} was unmodified. Skipping.'.format(file))
+                else:
+                    commit_list.append(file)
             else:
-                commit_list.append(file)
+                message('{} does not exist. Skipping.'.format(file))
+        if commit_list != []:
+            git('add', *commit_list)
         else:
-            message('{} does not exist. Skipping.'.format(file), 'yellow')
-    if commit_list != []:
-        git('add', *commit_list)
-    else:
-        message('No files to commit.')
-        exit(0)
+            message('No files to commit.')
+    except Exception as e:
+        print(e)

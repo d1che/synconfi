@@ -16,7 +16,7 @@ import os
 import json
 
 from singleton import Singleton
-from ui import error, message
+from ui import ask_confirm, message
 import paths
 import config
 
@@ -34,34 +34,39 @@ class ConfigController(metaclass=Singleton):
                 d = open(os.path.join(paths.PROGRAM_ROOT, '.temp_output'), 'w+')
                 d.close()
                 os.remove(os.path.join(paths.PROGRAM_ROOT, '.temp_output'))
-            except Exception as err:
-                error('{}'.format(err))
+            except Exception as e:
+                print(e)
 
-        # if config.json exists
-        if os.path.exists(paths.CONFIG):
-            # If keys in file do not match keys in defaults
-            if not self.validate():
-                self.save_defaults()
-                message('Config file was corrupt so defaults were loaded', 'yellow')
-        else:
-            self.save_defaults()
-
-        # load whatever is saved on disk
+        self.validate()
         self.load()
 
     def validate(self):
-        try:
-            f = open(paths.CONFIG, 'r')
-            check = json.load(f)
-            f.close()
-        except:
-            return False
+        # check if config file exists
+        if not os.path.exists(paths.CONFIG):
+            self.save_defaults()
 
-        # Compare stored key names against default key names
-        if set(config.defaults.keys()) == set(check.keys()):
-            return True
-        else:
-            return False
+        while True:
+            try:
+                # check if config file is readable and if it is valid json
+                f = open(paths.CONFIG, 'r')
+                check = json.load(f)
+                f.close()
+                if set(config.defaults.keys()) != set(check.keys()):
+                    raise Exception('Config file contains invalid keys.')
+            except json.JSONDecodeError as e:
+                print('Config file is corrupt.')
+                if ask_confirm('Load defaults?'):
+                    self.save_defaults()
+                else:
+                    exit()
+            except Exception as e:
+                print(e)
+                if ask_confirm('Load defaults?'):
+                    self.save_defaults()
+                else:
+                    exit()
+            finally:
+                break
 
     def save_defaults(self):
         try:
@@ -69,18 +74,16 @@ class ConfigController(metaclass=Singleton):
             json.dump(config.defaults, f, sort_keys = True, indent = 4)
             f.write('\n')
             f.close()
-            return True
-        except:
-            error('Could not save preferences.')
+        except Exception as e:
+                print(e)
 
     def load(self):
         try:
             f = open(paths.CONFIG, 'r')
             config.current = json.load(f)
             f.close()
-            return True
-        except:
-            error('Could not load configuration.')
+        except Exception as e:
+                print(e)
 
     def save(self):
         try:
@@ -88,6 +91,5 @@ class ConfigController(metaclass=Singleton):
             json.dump(config.current, f, sort_keys = True, indent = 4)
             f.write('\n')
             f.close()
-            return True
-        except:
-            error('Could not save configuration.')
+        except Exception as e:
+                print(e)

@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import os
+import shutil
 from argparse import ArgumentParser, RawTextHelpFormatter
 
 import constants
+import config
 
 def process_input():
     usage = '%(prog)s [options] file(s)'
@@ -84,6 +86,47 @@ def process_input():
     else:
         return options
 
+def change_config(configcontroller):
+    def move_local_repo():
+        while True:
+            new_path = ask_input('Please specify a path to move the existing repo to')
+            # perform path expansion to get the full path
+            new_path_abs = os.path.abspath(new_path)
+
+            try:
+                if not os.path.exists(new_path_abs):
+                    shutil.move(config.current['repo_local'], new_path_abs)
+                    config.current['repo_local'] = new_path_abs
+                    message('Successfully moved local repository to {}'.format(new_path_abs))
+                    break
+                else:
+                    print('This directory is not empty.')
+            except Exception as e:
+                print(e)
+
+    while True:
+        print('1) Move local repository')
+        print('2) Add/change remote repository')
+        print('3) Change prefered editor')
+        print('4) Show config file')
+        print('q) Quit')
+        answer = ask_input('Please make your choice')
+
+        match answer:
+            case '1':
+                move_local_repo()
+                configcontroller.save()
+            case '2':
+                print('answer 2')
+            case '3':
+                print('answer 3')
+            case '4':
+                print(config.current)
+            case 'q' | 'Q':
+                break
+            case _:
+                print('Incorrect answer')
+
 def format_sentences(text):
     words = text.split()
     i = 0
@@ -115,7 +158,9 @@ def ask_confirm(prompt='Continue?'):
 
 def ask_input(prompt, default=None):
     while True:
-        answer = input('{}: '.format(format_sentences(prompt)))
+        answer = input(
+            '{}: '.format(format_sentences(prompt)) if default == None else
+            '{} ({}): '.format(format_sentences(prompt), default))
         if answer != '':
             return answer
         elif default != None:
@@ -123,33 +168,7 @@ def ask_input(prompt, default=None):
         else:
             print('No input was received')
 
-def message(text, color=None):
-    match color:
-        case 'black':
-            os.system(constants.BLACK)
-        case 'red':
-            os.system(constants.RED)
-        case 'green':
-            os.system(constants.GREEN)
-        case 'yellow':
-            os.system(constants.YELLOW)
-        case 'blue':
-            os.system(constants.BLUE)
-        case 'magenta':
-            os.system(constants.MAGENTA)
-        case 'cyan':
-            os.system(constants.CYAN)
-        case 'white':
-            os.system(constants.WHITE)
-        case None:
-            pass
+def message(text):
     os.system(constants.BOLD)
     print(text)
     os.system(constants.RESET)
-
-def error(text):
-    os.system(constants.RED)
-    os.system(constants.BOLD)
-    print('ERROR: {}'.format(text))
-    os.system(constants.RESET)
-    exit(1)
