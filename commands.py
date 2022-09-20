@@ -17,7 +17,6 @@ import subprocess
 
 import paths
 import config
-from ui import message
 
 def which(command):
     try:
@@ -27,6 +26,7 @@ def which(command):
         return output.stdout.decode("utf-8").strip()
     except Exception as e:
         print(e)
+        exit()
 
 def test_connection():
     try:
@@ -39,6 +39,7 @@ def test_connection():
             raise Exception('Could not connect to github, please check your internet connection and ssh keys.')
     except Exception as e:
         print(e)
+        exit()
 
 def check_remote(remote):
     try:
@@ -48,9 +49,12 @@ def check_remote(remote):
             remote],
             capture_output=True)
         if output.returncode != 0:
-            raise Exception('{} does not appear to be remote repository.'.format(remote))
+            raise Exception('{} does not appear to be valid a remote repository.'.format(remote))
+        else:
+            return True
     except Exception as e:
         print(e)
+        return False
 
 def git_init(path):
     try:
@@ -64,6 +68,7 @@ def git_init(path):
             raise Exception('Could not initialize git repository in {}.'.format(config.current['local_repo']))
     except Exception as e:
         print(e)
+        exit()
 
 def git(*commands):
     try:
@@ -78,6 +83,7 @@ def git(*commands):
             raise Exception('{}.'.format(output.stderr.decode("utf-8").strip()))
     except Exception as e:
         print(e)
+        exit()
 
 def edit(*files):
     try:
@@ -89,14 +95,15 @@ def edit(*files):
                 os.system('{} {}'.format(nvim, file))
                 state2 = hash(file)
                 if state1 == state2:
-                    message('{} was unmodified. Skipping.'.format(file))
+                    print('{} was unmodified. Skipping.'.format(file))
                 else:
                     commit_list.append(file)
             else:
-                message('{} does not exist. Skipping.'.format(file))
+                print('{} does not exist. Skipping.'.format(file))
         if commit_list != []:
             git('add', *commit_list)
         else:
-            message('No files to commit.')
+            print('No files to commit.')
     except Exception as e:
         print(e)
+        exit()

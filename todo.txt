@@ -1,2 +1,3 @@
 TODO:
 x Find best design pattern for config module
+- Actually test if the remote repository is eligible. i.e. if it matches the local repository.

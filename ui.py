@@ -19,6 +19,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 import constants
 import config
 from helpers import format_sentences, format_path
+from commands import test_connection, check_remote
 
 def process_input():
     usage = '%(prog)s [options] file(s)'
@@ -101,7 +102,8 @@ def change_config(configcontroller):
                 local_repo()
                 configcontroller.save()
             case '2':
-                print('answer 2')
+                remote_repo()
+                configcontroller.save()
             case '3':
                 print('answer 3')
             case '4':
@@ -109,7 +111,7 @@ def change_config(configcontroller):
             case 'q' | 'Q':
                 break
             case _:
-                print('Incorrect answer')
+                print('Incorrect answer')    
 
 def local_repo(default=None):
     p = None
@@ -135,7 +137,25 @@ def local_repo(default=None):
                 print(e)
 
     # save new path
-    config.current['local_repo'] = p  
+    config.current['local_repo'] = p
+
+def remote_repo():
+    r = None
+    if config.current['remote_repo'] == '':
+        print(format_sentences('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address.'))
+    while True:
+        r = ask_input('Remote address')
+
+        message('Testing github connection')
+        test_connection()
+        message('Checking remote connection')
+        if check_remote(r):
+            break
+
+    # save new remote
+    config.current['remote_repo'] = r
+
+    message('Successfully updated remote repository')
 
 def ask_confirm(prompt='Continue?'):
     while True:

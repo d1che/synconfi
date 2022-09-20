@@ -19,8 +19,8 @@ import shutil
 
 import paths
 import config
-from ui import process_input, change_config, local_repo, ask_confirm, ask_input, message
-from commands import test_connection, check_remote, git_init, git, edit
+from ui import process_input, change_config, local_repo, remote_repo, ask_confirm, ask_input, message
+from commands import git_init, git, edit
 from configcontroller import ConfigController
 
 options = process_input()
@@ -42,13 +42,8 @@ def init_repo():
     git('commit', '-m', '"Synconfi initial commit"')
 
 def add_remote():
-    # get remote repository and test it
-    remote_repo = ask_input('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address')
-    message('Testing github connection')
-    test_connection()
-    message('Checking remote connection')
-    check_remote(remote_repo)
-    config.current['remote_repo'] = remote_repo
+    # set remote repository and test it
+    remote_repo()
 
     # add remote to local repository and perform initial push
     message('Adding remote')
