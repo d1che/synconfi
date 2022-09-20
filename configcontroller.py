@@ -16,7 +16,7 @@ import os
 import json
 
 from singleton import Singleton
-from ui import ask_confirm, message
+from ui import ask_confirm
 import paths
 import config
 
@@ -93,3 +93,6 @@ class ConfigController(metaclass=Singleton):
             f.close()
         except Exception as e:
                 print(e)
+
+    def print(self):
+        print('\n{}\n'.format(json.dumps(config.current, sort_keys = True, indent = 4)))

@@ -121,7 +121,7 @@ def change_config(configcontroller):
             case '3':
                 print('answer 3')
             case '4':
-                print(config.current)
+                configcontroller.print()
             case 'q' | 'Q':
                 break
             case _:
