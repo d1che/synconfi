@@ -105,7 +105,10 @@ def change_config(configcontroller):
                 remote_repo()
                 configcontroller.save()
             case '3':
-                print('answer 3')
+                print('Please enter the name of the editor you wish to use (an alias is also valid, if it accepts an argument)')
+                e = ask_input('Editor', 'vim')
+                config.current['editor'] = e
+                configcontroller.save()
             case '4':
                 print(configcontroller.print())
             case 'q' | 'Q':
@@ -119,7 +122,11 @@ def local_repo(default=None):
         local_repo = ask_input('Please specify a new path for the local git repository', default)
 
         p = format_path(local_repo)
-        if p:
+
+        if os.path.exists(p):
+            if len(os.listdir(p)) != 0:
+                print('This directory is not empty.')
+        else:
             try:
                 # primitive way of checking if current repo exists
                 if os.path.exists('{}/HEAD'.format(config.current['local_repo'])):

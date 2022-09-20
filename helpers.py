@@ -34,10 +34,5 @@ def format_path(p):
             path = os.path.abspath(p)
     elif platform == "win32":
         path = os.path.expandvars(repr(p))
-    
-    if os.path.exists(path):
-        if len(os.listdir(path)) != 0:
-            print('This directory is not empty.')
-            return False
 
     return path

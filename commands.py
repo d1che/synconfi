@@ -17,6 +17,7 @@ import subprocess
 
 import paths
 import config
+from helpers import format_path
 
 def which(command):
     try:
@@ -26,7 +27,6 @@ def which(command):
         return output.stdout.decode("utf-8").strip()
     except Exception as e:
         print(e)
-        exit()
 
 def test_connection():
     try:
@@ -87,12 +87,13 @@ def git(*commands):
 
 def edit(*files):
     try:
-        nvim = which('nvim')
+        editor = which(config.current['editor'])
         commit_list = []
-        for file in files[0]:
-            if os.path.exists(os.path.abspath(file)):
+        for f in files[0]:
+            file = format_path(f)
+            if os.path.exists(file):
                 state1 = hash(file)
-                os.system('{} {}'.format(nvim, file))
+                os.system('{} {}'.format(editor, file))
                 state2 = hash(file)
                 if state1 == state2:
                     print('{} was unmodified. Skipping.'.format(file))
