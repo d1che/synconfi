@@ -4,8 +4,8 @@ global current
 import paths
 
 defaults = {
-    'repo_local' : paths.REPO_LOCAL,
-    'repo_remote': '',
+    'local_repo' : paths.LOCAL_REPO,
+    'remote_repo': '',
     'editor': 'vim',
 }
 current = {}

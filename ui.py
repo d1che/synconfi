@@ -18,6 +18,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 import constants
 import config
+from helpers import format_sentences, format_path
 
 def process_input():
     usage = '%(prog)s [options] file(s)'
@@ -87,23 +88,6 @@ def process_input():
         return options
 
 def change_config(configcontroller):
-    def move_local_repo():
-        while True:
-            new_path = ask_input('Please specify a path to move the existing repo to')
-            # perform path expansion to get the full path
-            new_path_abs = os.path.abspath(new_path)
-
-            try:
-                if not os.path.exists(new_path_abs):
-                    shutil.move(config.current['repo_local'], new_path_abs)
-                    config.current['repo_local'] = new_path_abs
-                    message('Successfully moved local repository to {}'.format(new_path_abs))
-                    break
-                else:
-                    print('This directory is not empty.')
-            except Exception as e:
-                print(e)
-
     while True:
         print('1) Move local repository')
         print('2) Add/change remote repository')
@@ -114,36 +98,44 @@ def change_config(configcontroller):
 
         match answer:
             case '1':
-                move_local_repo()
+                local_repo()
                 configcontroller.save()
             case '2':
                 print('answer 2')
             case '3':
                 print('answer 3')
             case '4':
-                configcontroller.print()
+                print(configcontroller.print())
             case 'q' | 'Q':
                 break
             case _:
                 print('Incorrect answer')
 
-def format_sentences(text):
-    words = text.split()
-    i = 0
-    sentence = ''
-    sentences = []
+def local_repo(default=None):
+    p = None
     while True:
-        if i < len(words):
-            if len(sentence) < constants.MAX_WIDTH:
-                sentence += words[i] + ' '
-                i += 1
-            else:
-                sentences.append(sentence[0:-1])
-                sentence = ''
-        else:
-            sentences.append(sentence[0:-1])
-            break
-    return '\n'.join(sentences)
+        local_repo = ask_input('Please specify a new path for the local git repository', default)
+
+        p = format_path(local_repo)
+        if p:
+            try:
+                # primitive way of checking if current repo exists
+                if os.path.exists('{}/HEAD'.format(config.current['local_repo'])):
+                    if ask_confirm('Are you sure you wish to move the repo to {} ?'.format(p)):
+                        # move the existing repo to new location
+                        shutil.move(config.current['local_repo'], p)
+                        message('Successfully moved local repository to {}'.format(p))
+                        break
+                else:
+                    if ask_confirm('Are you sure you want to create a new repo at {} ?'.format(p)):
+                        # just make new dirs
+                        os.makedirs(p)
+                        break
+            except Exception as e:
+                print(e)
+
+    # save new path
+    config.current['local_repo'] = p  
 
 def ask_confirm(prompt='Continue?'):
     while True:

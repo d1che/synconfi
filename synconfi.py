@@ -19,7 +19,7 @@ import shutil
 
 import paths
 import config
-from ui import process_input, ask_confirm, ask_input, message, change_config
+from ui import process_input, change_config, local_repo, ask_confirm, ask_input, message
 from commands import test_connection, check_remote, git_init, git, edit
 from configcontroller import ConfigController
 
@@ -28,25 +28,11 @@ configcontroller = ConfigController()
 
 def init_repo():
     # set local repo path and create folders
-    while True:
-        repo_local = ask_input('Please specify a path for the local git repository', paths.REPO_LOCAL)
-        # perform path expansion to get the full path
-        repo_local_abs = os.path.abspath(repo_local)
-
-        if os.path.exists(repo_local_abs):
-            if len(os.listdir(repo_local_abs)) == 0:
-                os.makedirs(repo_local_abs)
-                break
-            else:
-                message('This directory is not empty.')
-        else:
-            os.makedirs(repo_local_abs)
-            break
-    config.current['repo_local'] = repo_local_abs
+    local_repo(paths.LOCAL_REPO)
 
     # create local repo
-    message('Initializing empty repository in {}'.format(config.current['repo_local']))
-    git_init(repo_local)
+    message('Initializing empty repository in {}'.format(config.current['local_repo']))
+    git_init(config.current['local_repo'])
 
     message('Disabling showUntrackedFiles')
     git('config', '--local', 'status.showUntrackedFiles', 'no')
@@ -57,25 +43,25 @@ def init_repo():
 
 def add_remote():
     # get remote repository and test it
-    repo_remote = ask_input('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address')
+    remote_repo = ask_input('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address')
     message('Testing github connection')
     test_connection()
     message('Checking remote connection')
-    check_remote(repo_remote)
-    config.current['repo_remote'] = repo_remote
+    check_remote(remote_repo)
+    config.current['remote_repo'] = remote_repo
 
     # add remote to local repository and perform initial push
     message('Adding remote')
-    git('remote', 'add', 'origin', config.current['repo_remote'])
+    git('remote', 'add', 'origin', config.current['remote_repo'])
     message('Pushing changes to remote')
     git('push', 'origin', 'main')
 
 if options.init:
-    if os.path.exists(config.current['repo_local']):
-        if not ask_confirm('This will re-initialize the local git repository. Are you sure you want to continue?'):
+    if os.path.exists(config.current['local_repo']):
+        if not ask_confirm('ATTENTION: By re-initializing, the current local repository at {} will be deleted immediately. Are you sure you want to continue?'.format(config.current['local_repo'])):
             exit()
         try:
-            shutil.rmtree(config.current['repo_local'])
+            shutil.rmtree(config.current['local_repo'])
         except Exception as e:
             print(e)
 
@@ -91,7 +77,7 @@ if options.init:
     
     message('Initialization complete.')
 
-if not os.path.exists(config.current['repo_local']):
+if not os.path.exists(config.current['local_repo']):
     message('Local repository not found. Please run --init first.')
     exit()
 
@@ -107,4 +93,5 @@ elif options.all:
 elif options.configure:
     change_config(configcontroller)
 else:
-    edit(options.files)
+    if options.files:
+        edit(options.files)

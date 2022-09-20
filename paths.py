@@ -17,4 +17,4 @@ import os
 HOME = os.getenv('HOME')
 PROGRAM_ROOT = os.path.join(HOME, '.config/synconfi')
 CONFIG = os.path.join(PROGRAM_ROOT, 'config.json')
-REPO_LOCAL = os.path.join(PROGRAM_ROOT, 'repo')
+LOCAL_REPO = os.path.join(PROGRAM_ROOT, 'repo')

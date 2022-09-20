@@ -61,7 +61,7 @@ def git_init(path):
             '--bare', '{}'.format(path)],
             capture_output=True)
         if output.returncode != 0:
-            raise Exception('Could not initialize git repository in {}.'.format(config.current['repo_local']))
+            raise Exception('Could not initialize git repository in {}.'.format(config.current['local_repo']))
     except Exception as e:
         print(e)
 
@@ -70,7 +70,7 @@ def git(*commands):
         git = which('git')
         output = subprocess.run([
             '{}'.format(git),
-            '--git-dir={}/'.format(config.current['repo_local']),
+            '--git-dir={}/'.format(config.current['local_repo']),
             '--work-tree={}'.format(paths.HOME),
             *commands],
             capture_output=True)
