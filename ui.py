@@ -14,21 +14,21 @@
 
 import os
 import shutil
-from argparse import ArgumentParser, RawTextHelpFormatter
+import argparse
 
 import constants
 import config
-from helpers import format_sentences, format_path
-from commands import test_connection, check_remote
+import helpers
+import commands
 
 def process_input():
     usage = '%(prog)s [options] file(s)'
     version = '0.9.0'
     description = 'Synchronize dot files and other config files across multiple systems.'
     epilog = ''
-    formatter = lambda prog: RawTextHelpFormatter(prog, max_help_position=28)
+    formatter = lambda prog: argparse.RawTextHelpFormatter(prog, max_help_position=28)
 
-    parser = ArgumentParser(
+    parser = argparse.ArgumentParser(
         usage=usage,
         description=description,
         epilog=epilog,
@@ -36,31 +36,35 @@ def process_input():
         argument_default=False)
 
     parser.add_argument(
-        '-r', '--restore',
-        metavar='FILE',
-        action='store',
-        help='restore a file from the repository')
-    parser.add_argument(
         '-n', '--new',
         metavar='FILE',
         action='store',
         help='add a new file to the repository without editing it.')
     parser.add_argument(
-        '-p', '--push',
-        action='store_true',
-        help='push all changes to the remote')
+        '-r', '--restore',
+        metavar='FILE',
+        action='store',
+        help='restore a file from the repository')
     parser.add_argument(
         '-a', '--all',
         action='store_true',
         help='restore all files from the repository')
     parser.add_argument(
-        '-i', '--init',
+        '-p', '--push',
         action='store_true',
-        help='initialize a git repository to be used with %(prog)s')
+        help='push all changes to the remote')
+    parser.add_argument(
+        '-l', '--list',
+        action='store_true',
+        help='list all files in the repository')
     parser.add_argument(
         '-c', '--configure',
         action='store_true',
         help='edit the configuration')
+    parser.add_argument(
+        '-i', '--init',
+        action='store_true',
+        help='initialize a git repository to be used with %(prog)s')
     parser.add_argument(
         '-v', '--version',
         action='version',
@@ -83,7 +87,7 @@ def process_input():
     elif not any(list(vars(options).values())[0:-1]) and len(options.files) < 1:
         parser.error('Please supply a file or option. (-h for help)')
     # check that not more than one file is given when using specific options
-    elif (options.restore or options.new) and len(options.files) < 1:
+    elif (options.restore or options.new) and len(options.files) != 1:
         parser.error('Please supply exactly 1 argument when using --restore or --add.')
     else:
         return options
@@ -149,14 +153,14 @@ def local_repo(default=None):
 def remote_repo():
     r = None
     if config.current['remote_repo'] == '':
-        print(format_sentences('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address.'))
+        print(helpers.format_sentences('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address.'))
     while True:
         r = ask_input('Remote address')
 
         message('Testing github connection')
-        test_connection()
+        commands.test_connection()
         message('Checking remote connection')
-        if check_remote(r):
+        if commands.check_remote(r):
             break
 
     # save new remote
@@ -166,7 +170,7 @@ def remote_repo():
 
 def ask_confirm(prompt='Continue?'):
     while True:
-        answer = input('{} [y/N]: '.format(format_sentences(prompt)))
+        answer = input('{} [y/N]: '.format(helpers.format_sentences(prompt)))
         match answer:
             case 'y' | 'Y':
                 return True
@@ -178,8 +182,8 @@ def ask_confirm(prompt='Continue?'):
 def ask_input(prompt, default=None):
     while True:
         answer = input(
-            '{}: '.format(format_sentences(prompt)) if default == None else
-            '{} ({}): '.format(format_sentences(prompt), default))
+            '{}: '.format(helpers.format_sentences(prompt)) if default == None else
+            '{} ({}): '.format(helpers.format_sentences(prompt), default))
         if answer != '':
             return answer
         elif default != None:

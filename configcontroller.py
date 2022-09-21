@@ -15,12 +15,12 @@
 import os
 import json
 
-from singleton import Singleton
-from ui import ask_confirm
+import singleton
+import ui
 import paths
 import config
 
-class ConfigController(metaclass=Singleton):
+class ConfigController(metaclass=singleton.Singleton):
 
     def __init__(self):
         # initialize program root
@@ -55,13 +55,13 @@ class ConfigController(metaclass=Singleton):
                     raise Exception('Config file contains invalid keys.')
             except json.JSONDecodeError as e:
                 print('Config file is corrupt.')
-                if ask_confirm('Load defaults?'):
+                if ui.ask_confirm('Load defaults?'):
                     self.save_defaults()
                 else:
                     exit()
             except Exception as e:
                 print(e)
-                if ask_confirm('Load defaults?'):
+                if ui.ask_confirm('Load defaults?'):
                     self.save_defaults()
                 else:
                     exit()

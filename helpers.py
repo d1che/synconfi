@@ -1,5 +1,6 @@
 import os
-from sys import platform
+import sys
+import hashlib
 
 import constants
 
@@ -24,7 +25,7 @@ def format_sentences(text):
 def format_path(p):
     path = ''
     # Attempt to make this portable by performing the right kind of path expansion
-    if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+    if sys.platform == 'linux' or sys.platform == 'linux2' or sys.platform == 'darwin':
         if '~' in p:
             path = os.path.expanduser(p)
         elif '$HOME' in p:
@@ -32,7 +33,15 @@ def format_path(p):
             path = '{}{}'.format(os.environ['HOME'], rest_path)
         else:
             path = os.path.abspath(p)
-    elif platform == "win32":
+    elif sys.platform == "win32":
         path = os.path.expandvars(repr(p))
 
     return path
+
+def calculate_hash(file):
+    md5_hash = hashlib.md5()
+    with open(file, 'rb') as f:
+        # Read and update hash in chunks of 4K
+        for byte_block in iter(lambda: f.read(4096), b''):
+            md5_hash.update(byte_block)
+        return md5_hash.hexdigest()
