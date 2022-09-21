@@ -63,7 +63,7 @@ def check_remote(remote):
             'git',
             'ls-remote',
             remote],
-            capture_output=True)
+            stdout=subprocess.DEVNULL)
 
         if output.returncode != 0:
             raise Exception('{} does not appear to be valid a remote repository.'.format(remote))
@@ -84,8 +84,7 @@ def git_init(path):
         output = subprocess.run([
             '{}'.format(git),
             'init',
-            '--bare', '{}'.format(path)],
-            capture_output=True)
+            '--bare', '{}'.format(path)])
 
         if output.returncode != 0:
             raise Exception('Could not initialize git repository in {}.'.format(path))
@@ -111,6 +110,7 @@ def git(*commands):
         if output.returncode != 0:
             raise Exception('{}.'.format(output.stderr.decode("utf-8").strip()))
     
+        return output.stdout.decode("utf-8").strip()
     except Exception as e:
         print(e)
         exit()
@@ -133,8 +133,7 @@ def edit(*files):
                 ui.message('Creating {}'.format(file))
                 output = subprocess.run([
                     'touch',
-                    file],
-                    capture_output=True)
+                    file])
                 if output.returncode !=0:
                     raise Exception('Could not create {}'.format(file))
             
@@ -142,10 +141,9 @@ def edit(*files):
             state1 = helpers.calculate_hash(file)
             
             # launch file in configured editor
-            output = subprocess.Popen([
+            output = subprocess.run([
                 '{}'.format(editor),
-                file],
-                capture_output=True)
+                file])
             if output.returncode != 0:
                 raise Exception('Could not edit {}'.format(file))
 
@@ -161,8 +159,9 @@ def edit(*files):
 
         # commit files
         if commit_list != []:
-            git('add', commit_list)
-            git('commit', '-m', '"{}"'.format(commit_list))
+            for f in commit_list:
+                git('add', f)
+            git('commit', '-m', '"{}"'.format(' '.join(commit_list)))
         else:
             print('No files to commit.')
 

@@ -161,6 +161,10 @@ def remote_repo():
         commands.test_connection()
         message('Checking remote connection')
         if commands.check_remote(r):
+            if commands.git('remote') == 'origin':
+                message('Removing old remote (origin)')
+                commands.git('remote', 'remove', 'origin')
+            commands.git('remote', 'add', 'origin', config.current['remote_repo'])
             break
 
     # save new remote

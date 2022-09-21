@@ -41,16 +41,6 @@ def init_repo():
     commands.git('add', paths.CONFIG)
     commands.git('commit', '-m', '"Synconfi initial commit"')
 
-def add_remote():
-    # set remote repository and test it
-    ui.remote_repo()
-
-    # add remote to local repository and perform initial push
-    ui.message('Adding remote')
-    commands.git('remote', 'add', 'origin', config.current['remote_repo'])
-    ui.message('Pushing changes to remote')
-    commands.git('push', 'origin', 'main')
-
 if options.init:
     if os.path.exists(config.current['local_repo']):
         if not ui.ask_confirm('ATTENTION: By re-initializing, the current local repository at {} will be deleted immediately. Are you sure you want to continue?'.format(config.current['local_repo'])):
@@ -63,7 +53,11 @@ if options.init:
     init_repo()
     
     if ui.ask_confirm('Do you wish to set up a remote repository now?'):
-        add_remote()      
+        # set remote repository, test it and add.
+        ui.remote_repo()
+
+        ui.message('Pushing changes to remote')
+        commands.git('push', 'origin', 'main')    
     else:
         ui.message('Please don\'t forget to add a remote before pushing changes.')
 
