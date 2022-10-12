@@ -125,7 +125,7 @@ def local_repo(default=None):
     while True:
         local_repo = ask_input('Please specify a new path for the local git repository', default)
 
-        p = format_path(local_repo)
+        p = helpers.format_path(local_repo)
 
         if os.path.exists(p):
             if len(os.listdir(p)) != 0:
@@ -152,23 +152,47 @@ def local_repo(default=None):
 
 def remote_repo():
     r = None
-    if config.current['remote_repo'] == '':
-        print(helpers.format_sentences('Please create an empty git repository on github or bitbucket that you wish to use with synconfi. When you are done, please enter the ssh address.'))
+    pull = False
+    print('Please provide a remote address. A remote address has to be an ssh\naddress to either:\n\t1. A freshly initialized remote repository, or\n\t2. An existing remote repository that was previously used with synconfi')
     while True:
         r = ask_input('Remote address')
 
-        message('Testing github connection')
-        commands.test_connection()
-        message('Checking remote connection')
-        if commands.check_remote(r):
-            if commands.git('remote') == 'origin':
-                message('Removing old remote (origin)')
-                commands.git('remote', 'remove', 'origin')
-            commands.git('remote', 'add', 'origin', config.current['remote_repo'])
-            break
+        # check if new remote is the same as current remote
+        if r == config.current['remote_repo']:
+            print('This remote is already setup as the current remote.')
+        else:
+            message('Testing github connection')
+            commands.test_connection()
+            message('Checking remote connection')
+            
+            # if remote is not empty
+            if commands.ls_remote(r) != '':
+                if commands.is_synconfi_repo(r):
+                    if ask_confirm(helpers.format_sentences('{} seems to be a valid remote synconfi repository, would you like to pull from this remote?'.format(r))):
+                        break
+                else:
+                    print(helpers.format_sentences('{} is not a valid remote synconfi repository, please enter a different address.'))
+            else:
+                break
 
-    # save new remote
+    # remove old remote if present
+    if commands.git('remote') == 'origin':
+        commands.git('remote', 'remove', 'origin')
+
+    # add new remote
+    if config.current['remote_repo'] == '':
+        message('Adding remote {}'.format(r))
+    else:
+        message('Updating remote {}'.format(r))
+    commands.git('remote', 'add', 'origin', r)
+
+    # save new remote to config
     config.current['remote_repo'] = r
+
+    # pull in changes if necessary
+    if pull:
+        message('Pulling in changes from remote repository')
+        pass
 
     message('Successfully updated remote repository')
 

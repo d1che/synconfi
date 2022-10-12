@@ -14,6 +14,7 @@
 
 import os
 import subprocess
+import shutil
 
 import paths
 import config
@@ -55,7 +56,7 @@ def test_connection():
         print(e)
         exit()
 
-def check_remote(remote):
+def ls_remote(remote):
     try:
 
         # check remote with ls-remote
@@ -63,12 +64,51 @@ def check_remote(remote):
             'git',
             'ls-remote',
             remote],
-            stdout=subprocess.DEVNULL)
+            capture_output=True)
 
         if output.returncode != 0:
-            raise Exception('{} does not appear to be valid a remote repository.'.format(remote))
-        else:
+            raise Exception('\"{}\" does not appear to be a git repository.'.format(remote))
+
+        return output.stdout.decode("utf-8").strip()
+    except Exception as e:
+        print(e)
+        return False
+
+def is_synconfi_repo(remote):
+    files = None
+    try:
+
+        if os.path.isdir(paths.TEMP):
+            shutil.rmtree(paths.TEMP)
+        os.makedirs(paths.TEMP)
+
+        output = subprocess.run([
+            'git',
+            'clone',
+            '--bare',
+            '--depth=1',
+            '{}'.format(remote),
+            '{}'.format(paths.TEMP)],
+            capture_output=True)
+
+        output = subprocess.run([
+            'git',
+            '--git-dir={}'.format(paths.TEMP),
+            'ls-tree',
+            '--name-only',
+            '-r',
+            'HEAD'],
+            capture_output=True)
+
+        files = output.stdout.decode("utf-8").strip()
+
+        # cleanup
+        shutil.rmtree(paths.TEMP)
+
+        if '.config/synconfi/config.json' in files:
             return True
+        else:
+            return False
 
     except Exception as e:
         print(e)
@@ -84,7 +124,8 @@ def git_init(path):
         output = subprocess.run([
             '{}'.format(git),
             'init',
-            '--bare', '{}'.format(path)])
+            '--bare', '{}'.format(path)],
+            capture_output=True)
 
         if output.returncode != 0:
             raise Exception('Could not initialize git repository in {}.'.format(path))

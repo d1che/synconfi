@@ -57,7 +57,7 @@ if options.init:
         ui.remote_repo()
 
         ui.message('Pushing changes to remote')
-        commands.git('push', 'origin', 'main')    
+        commands.git('push', 'origin', 'main')
     else:
         ui.message('Please don\'t forget to add a remote before pushing changes.')
 
