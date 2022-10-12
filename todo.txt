@@ -1,5 +1,5 @@
 TODO:
 x Find best design pattern for config module
-- Actually test if the remote repository is eligible. i.e. if it matches the local repository.
+x Actually test if the remote repository is eligible. i.e. if it matches the local repository. -> You can choose either a 'compatible' synconfi repo or a new one. No grey areas.
 - Add "text=True" as argument to all subprocess calls so we don't have to decode stdout/stderr manually.
-- Implement setting the editor to the $EDITOR env variable
+- Implement setting the editor to the $EDITOR env variables
