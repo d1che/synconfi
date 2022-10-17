@@ -12,14 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import os
 import shutil
-import argparse
 
-import constants
-import config
-import helpers
 import commands
+import config
+import constants
+import helpers
 
 def process_input():
     usage = '%(prog)s [options] file(s)'
@@ -64,7 +64,7 @@ def process_input():
     parser.add_argument(
         '-i', '--init',
         action='store_true',
-        help='initialize a git repository to be used with %(prog)s')
+        help='initialize a new git repository to be used with %(prog)s')
     parser.add_argument(
         '-v', '--version',
         action='version',
@@ -90,35 +90,7 @@ def process_input():
     elif (options.restore or options.new) and len(options.files) != 1:
         parser.error('Please supply exactly 1 argument when using --restore or --add.')
     else:
-        return options
-
-def change_config(configcontroller):
-    while True:
-        print('1) Move local repository')
-        print('2) Add/change remote repository')
-        print('3) Change prefered editor')
-        print('4) Show config file')
-        print('q) Quit')
-        answer = ask_input('Please make your choice')
-
-        match answer:
-            case '1':
-                local_repo()
-                configcontroller.save()
-            case '2':
-                remote_repo()
-                configcontroller.save()
-            case '3':
-                print('Please enter the name of the editor you wish to use (an alias is also valid, if it accepts an argument)')
-                e = ask_input('Editor', 'vim')
-                config.current['editor'] = e
-                configcontroller.save()
-            case '4':
-                print(configcontroller.print())
-            case 'q' | 'Q':
-                break
-            case _:
-                print('Incorrect answer')    
+        return options   
 
 def local_repo(default=None):
     p = None
@@ -144,57 +116,11 @@ def local_repo(default=None):
                         # just make new dirs
                         os.makedirs(p)
                         break
-            except Exception as e:
+            except Exception as e:  
                 print(e)
 
     # save new path
     config.current['local_repo'] = p
-
-def remote_repo():
-    r = None
-    pull = False
-    print('Please provide a remote address. A remote address has to be an ssh\naddress to either:\n\t1. A freshly initialized remote repository, or\n\t2. An existing remote repository that was previously used with synconfi')
-    while True:
-        r = ask_input('Remote address')
-
-        # check if new remote is the same as current remote
-        if r == config.current['remote_repo']:
-            print('This remote is already setup as the current remote.')
-        else:
-            message('Testing github connection')
-            commands.test_connection()
-            message('Checking remote connection')
-            
-            # if remote is not empty
-            if commands.ls_remote(r) != '':
-                if commands.is_synconfi_repo(r):
-                    if ask_confirm(helpers.format_sentences('{} seems to be a valid remote synconfi repository, would you like to pull from this remote?'.format(r))):
-                        break
-                else:
-                    print(helpers.format_sentences('{} is not a valid remote synconfi repository, please enter a different address.'))
-            else:
-                break
-
-    # remove old remote if present
-    if commands.git('remote') == 'origin':
-        commands.git('remote', 'remove', 'origin')
-
-    # add new remote
-    if config.current['remote_repo'] == '':
-        message('Adding remote {}'.format(r))
-    else:
-        message('Updating remote {}'.format(r))
-    commands.git('remote', 'add', 'origin', r)
-
-    # save new remote to config
-    config.current['remote_repo'] = r
-
-    # pull in changes if necessary
-    if pull:
-        message('Pulling in changes from remote repository')
-        pass
-
-    message('Successfully updated remote repository')
 
 def ask_confirm(prompt='Continue?'):
     while True:

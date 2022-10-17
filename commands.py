@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
-import subprocess
 import shutil
+import subprocess
 
 import paths
 import config
@@ -23,7 +23,6 @@ import ui
 
 def which(command):
     try:
-
         # perform which
         output = subprocess.run([
             'which',
@@ -41,7 +40,6 @@ def which(command):
 
 def test_connection():
     try:
-
         # check connection to github
         output = subprocess.run([
             'ssh',
@@ -58,7 +56,6 @@ def test_connection():
 
 def ls_remote(remote):
     try:
-
         # check remote with ls-remote
         output = subprocess.run([
             'git',
@@ -74,49 +71,8 @@ def ls_remote(remote):
         print(e)
         return False
 
-def is_synconfi_repo(remote):
-    files = None
-    try:
-
-        if os.path.isdir(paths.TEMP):
-            shutil.rmtree(paths.TEMP)
-        os.makedirs(paths.TEMP)
-
-        output = subprocess.run([
-            'git',
-            'clone',
-            '--bare',
-            '--depth=1',
-            '{}'.format(remote),
-            '{}'.format(paths.TEMP)],
-            capture_output=True)
-
-        output = subprocess.run([
-            'git',
-            '--git-dir={}'.format(paths.TEMP),
-            'ls-tree',
-            '--name-only',
-            '-r',
-            'HEAD'],
-            capture_output=True)
-
-        files = output.stdout.decode("utf-8").strip()
-
-        # cleanup
-        shutil.rmtree(paths.TEMP)
-
-        if '.config/synconfi/config.json' in files:
-            return True
-        else:
-            return False
-
-    except Exception as e:
-        print(e)
-        return False
-
 def git_init(path):
     try:
-
         # get full path of git command
         git = which('git')
 
@@ -136,7 +92,6 @@ def git_init(path):
 
 def git(*commands):
     try:
-
         # get full path of git command
         git = which('git')
 
@@ -158,7 +113,6 @@ def git(*commands):
 
 def edit(*files):
     try:
-
         # get full path of configured editor
         editor = which(config.current['editor'])
 

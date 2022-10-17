@@ -17,14 +17,16 @@
 import os
 import shutil
 
-import paths
-import config
-import ui
 import commands
+import config
 import configcontroller
+import paths
+import remote
+import ui
 
 options = ui.process_input()
 configcontroller = configcontroller.ConfigController()
+remote = remote.Remote()
 
 def init_repo():
     # set local repo path and create folders
@@ -41,6 +43,34 @@ def init_repo():
     commands.git('add', paths.CONFIG)
     commands.git('commit', '-m', '"Synconfi initial commit"')
 
+def change_config():
+    while True:
+        print('1) Move local repository')
+        print('2) Add/change remote repository')
+        print('3) Change prefered editor')
+        print('4) Show config file')
+        print('q) Quit')
+        answer = ui.ask_input('Please make your choice')
+
+        match answer:
+            case '1':
+                ui.local_repo()
+                configcontroller.save()
+            case '2':
+                remote.new()
+                configcontroller.save()
+            case '3':
+                print('Please enter the name of the editor you wish to use (an alias is also valid, if it accepts an argument)')
+                e = ui.ask_input('Editor', 'vim')
+                config.current['editor'] = e
+                configcontroller.save()
+            case '4':
+                print(configcontroller.print())
+            case 'q' | 'Q':
+                break
+            case _:
+                print('Incorrect answer') 
+
 if options.init:
     if os.path.exists(config.current['local_repo']):
         if not ui.ask_confirm('ATTENTION: By re-initializing, the current local repository at {} will be deleted immediately. Are you sure you want to continue?'.format(config.current['local_repo'])):
@@ -54,7 +84,7 @@ if options.init:
     
     if ui.ask_confirm('Do you wish to set up a remote repository now?'):
         # set remote repository, test it and add.
-        ui.remote_repo()
+        remote.new()
 
         ui.message('Pushing changes to remote')
         commands.git('push', 'origin', 'main')
@@ -82,7 +112,7 @@ elif options.push:
 elif options.list:
     commands.git('ls-files')
 elif options.configure:
-    ui.change_config(configcontroller)
+    change_config()
 else:
     if options.files:
         commands.edit(options.files)
